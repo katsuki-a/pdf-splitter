@@ -30,4 +30,16 @@ The core CLI structure is now implemented using a modular approach. Future impro
 *   **Style:** Follow PEP 8.
 *   **Documentation:** Use Google-style docstrings.
 *   **Typing:** Use Python type hints (`typing` module) for all functions.
-*   **Testing:** Implement unit tests using `pytest` (Next Priority).
+*   **Testing:** Unit tests are implemented using `pytest`. Run tests with `python -m pytest`.
+
+## 5. Current State vs. Desired State
+*   **Current:** 
+    *   Modular CLI tool implemented.
+    *   Basic splitting by top-level outline works.
+    *   Unit tests for sanitization and splitting logic (using dummy PDFs) are implemented.
+*   **Desired:** 
+    *   Support for nested outlines (recursive splitting or flattening options).
+    *   Improved handling of edge cases (e.g., PDFs without clear page numbering in destinations).
+    *   Configuration file or advanced CLI flags for selective splitting (e.g., skip front matter).
+    *   Integration of linting (e.g., `ruff` or `flake8`) into the workflow.
+
