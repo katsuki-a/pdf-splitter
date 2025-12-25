@@ -16,22 +16,18 @@ The tool must support the following features via Command Line Interface:
 *   **Sanitization:** Automatically generate safe filenames from chapter titles (removing illegal characters like `/`, `:`, etc.).
 
 ## 3. Architecture & Refactoring Plan
-The current codebase consists of hardcoded scripts (`split_pdf_by_outline.py`). The next phase involves refactoring into a proper Python package structure:
+The core CLI structure is now implemented using a modular approach. Future improvements will focus on enhancing the splitting logic and robustness.
 
-*   **CLI Framework:** Use `click` or `argparse` for argument parsing.
-*   **Modular Design:**
+*   **CLI Framework:** `argparse` is used for argument parsing.
+*   **Modular Design:** (Implemented)
     *   `src/cli.py`: Entry point handling user input.
     *   `src/splitter.py`: Core logic for parsing outlines and writing PDF pages.
     *   `src/utils.py`: Filename sanitization and string manipulation.
-*   **Dependency Management:** Maintain `requirements.txt` or `pyproject.toml` (currently using `pypdf`).
+*   **Dependency Management:** `requirements.txt` is maintained.
 
 ## 4. Development Standards
 *   **Language:** Python 3.9+
 *   **Style:** Follow PEP 8.
 *   **Documentation:** Use Google-style docstrings.
 *   **Typing:** Use Python type hints (`typing` module) for all functions.
-*   **Testing:** Implement unit tests using `pytest` (future scope).
-
-## 5. Current State vs. Desired State
-*   **Current:** `split_pdf_by_outline.py` hardcodes "Googleのソフトウェアエンジニアリング.pdf".
-*   **Desired:** `pdf-splitter <input_file.pdf> --output <dir>` runs the tool on any file.
+*   **Testing:** Implement unit tests using `pytest` (Next Priority).
