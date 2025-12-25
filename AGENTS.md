@@ -16,14 +16,14 @@ The tool must support the following features via Command Line Interface:
 *   **Sanitization:** Automatically generate safe filenames from chapter titles (removing illegal characters like `/`, `:`, etc.).
 
 ## 3. Architecture & Refactoring Plan
-The core CLI structure is now implemented using a modular approach. Future improvements will focus on enhancing the splitting logic and robustness.
+The core CLI structure is implemented using a modular approach.
 
 *   **CLI Framework:** `argparse` is used for argument parsing.
-*   **Modular Design:** (Implemented)
-    *   `src/cli.py`: Entry point handling user input.
-    *   `src/splitter.py`: Core logic for parsing outlines and writing PDF pages.
+*   **Modular Design:**
+    *   `src/cli.py`: Entry point handling user input and configuration.
+    *   `src/splitter.py`: Core logic for recursive outline parsing, conflict resolution, and PDF writing.
     *   `src/utils.py`: Filename sanitization and string manipulation.
-*   **Dependency Management:** `requirements.txt` is maintained.
+*   **Dependency Management:** `requirements.txt` is maintained (primary dependency: `pypdf`).
 
 ## 4. Development Standards
 *   **Language:** Python 3.9+
@@ -34,13 +34,16 @@ The core CLI structure is now implemented using a modular approach. Future impro
 
 ## 5. Current State vs. Desired State
 *   **Current:** 
-    *   Modular CLI tool implemented.
-    *   Basic splitting by top-level outline works.
-    *   Unit tests implemented.
-    *   **In Progress:** Implementing nested outline support (Recursive parsing with same-page conflict resolution).
+    *   Modular CLI tool with `argparse` support.
+    *   **Recursive Outline Support:** Can traverse nested bookmarks with configurable depth (`--max-depth`).
+    *   **Smart Conflict Resolution:** Handles multiple outline items pointing to the same page by prioritizing higher-level items.
+    *   **Automated Sanitization:** Generates safe filenames from chapter titles.
+    *   **Test Suite:** Unit tests cover core splitting logic and utilities.
 *   **Desired:** 
-    *   Support for nested outlines (Recursive splitting with depth control).
-    *   Improved handling of edge cases (e.g., PDFs without clear page numbering in destinations).
-    *   Configuration file or advanced CLI flags for selective splitting (e.g., skip front matter).
-    *   Integration of linting into the workflow.
+    *   **Selective Splitting:** Support for regex-based title exclusion or inclusion (e.g., skip "Front Matter").
+    *   **Configuration Files:** Support for per-book configuration (YAML/JSON) to save preferred depth and exclusion rules.
+    *   **Enhanced Metadata:** Preservation of original metadata and internal links in split files where possible.
+    *   **Progress Visualization:** Add a progress bar (e.g., `tqdm`) for processing large PDF files.
+    *   **Error Robustness:** Better handling of malformed PDF outlines or missing destinations.
+    *   **CI Integration:** GitHub Actions for automated linting and testing.
 

@@ -40,19 +40,25 @@ Originally optimized for O'Reilly-style technical books (handling structures lik
 To split a PDF file, run the `src.cli` module using Python:
 
 ```bash
-python -m src.cli <input_file_path> [-o <output_directory>]
+python -m src.cli <input_file_path> [-o <output_directory>] [-d <max_depth>]
 ```
 
 ### Arguments
 
 *   `input_file`: Path to the input PDF file (Required).
 *   `-o`, `--output`: Directory to save the split PDF files. If omitted, a directory named `<input_filename>_split` will be created in the same location as the input file.
+*   `-d`, `--max-depth`: Maximum depth of the outline to process. Default is `1` (top-level items only). Increase this value to capture nested chapters/sections.
 
 ### Examples
 
-Split a file using default output settings:
+Split a file using default output settings (top-level chapters only):
 ```bash
 python -m src.cli my_book.pdf
+```
+
+Split a file including nested sections (up to depth 2):
+```bash
+python -m src.cli my_book.pdf --max-depth 2
 ```
 
 Split a file and save to a specific directory:
