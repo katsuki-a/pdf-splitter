@@ -36,10 +36,11 @@ The core CLI structure is now implemented using a modular approach. Future impro
 *   **Current:** 
     *   Modular CLI tool implemented.
     *   Basic splitting by top-level outline works.
-    *   Unit tests for sanitization and splitting logic (using dummy PDFs) are implemented.
+    *   Unit tests implemented.
+    *   **In Progress:** Implementing nested outline support (Recursive parsing with same-page conflict resolution).
 *   **Desired:** 
-    *   Support for nested outlines (recursive splitting or flattening options).
+    *   Support for nested outlines (Recursive splitting with depth control).
     *   Improved handling of edge cases (e.g., PDFs without clear page numbering in destinations).
     *   Configuration file or advanced CLI flags for selective splitting (e.g., skip front matter).
-    *   Integration of linting (e.g., `ruff` or `flake8`) into the workflow.
+    *   Integration of linting into the workflow.
 
