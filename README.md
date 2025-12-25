@@ -20,8 +20,8 @@ Originally optimized for O'Reilly-style technical books (handling structures lik
 
 1.  Clone this repository:
     ```bash
-    git clone <repository-url>
-    cd <repository-directory>
+    git clone https://github.com/katsuki-a/pdf-splitter.git
+    cd pdf-splitter
     ```
 
 2.  Create and activate a virtual environment (recommended):
@@ -77,4 +77,4 @@ python -m src.cli my_book.pdf --output ./chapters/
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
