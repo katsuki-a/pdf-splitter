@@ -8,9 +8,12 @@ class PDFSplitter:
         self.pdf_path = pdf_path
         self.output_dir = output_dir
 
-    def split(self) -> None:
+    def split(self, max_depth: int = 1) -> None:
         """
         PDFのアウトラインに基づいてファイルを分割する。
+        
+        Args:
+            max_depth (int): 解析するアウトラインの最大深度。1はトップレベルのみ。
         """
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
@@ -25,7 +28,17 @@ class PDFSplitter:
                 print("No outline found. Cannot split by chapters.")
                 return
 
-            sections = self._parse_outline(reader, outline)
+            # 再帰的にアウトラインを収集
+            raw_sections = []
+            self._collect_outline_items(reader, outline, 0, raw_sections)
+            
+            # 深度制限と重複解決
+            sections = self._process_sections(raw_sections, max_depth)
+            
+            if not sections:
+                print("No sections found after filtering.")
+                return
+
             self._write_sections(reader, sections, total_pages)
             print("Split complete.")
 
@@ -33,28 +46,54 @@ class PDFSplitter:
             print(f"An error occurred during splitting: {e}")
             raise e
 
-    def _parse_outline(self, reader: PdfReader, outline: List[Any]) -> List[Tuple[str, int]]:
+    def _collect_outline_items(self, reader: PdfReader, outline_items: List[Any], current_depth: int, result: List[dict]) -> None:
         """
-        アウトラインを解析し、(タイトル, 開始ページ) のリストを返す。
-        現在はトップレベルの項目のみを対象とする。
+        アウトラインを再帰的に走査して項目を収集する。
         """
-        sections = []
-        for item in outline:
+        for item in outline_items:
             if isinstance(item, list):
-                # ネストされた項目はスキップ (将来的な拡張ポイント)
-                continue
-            
-            try:
-                title = item.title
-                page_num = reader.get_destination_page_number(item)
-                sections.append((title, page_num))
-            except Exception as e:
-                print(f"Skipping outline item due to error: {e}")
-                continue
+                self._collect_outline_items(reader, item, current_depth + 1, result)
+            else:
+                try:
+                    title = item.title
+                    page_num = reader.get_destination_page_number(item)
+                    result.append({
+                        "title": title,
+                        "page": page_num,
+                        "depth": current_depth
+                    })
+                except Exception as e:
+                    print(f"Skipping outline item due to error: {e}")
+                    continue
+
+    def _process_sections(self, raw_sections: List[dict], max_depth: int) -> List[Tuple[str, int]]:
+        """
+        収集したセクションを処理する：
+        1. 深度でフィルタリング
+        2. ページ番号順にソート
+        3. 同じページを指す項目は、最も階層が浅い（depthが小さい）ものを優先
+        """
+        # 1. フィルタリング (max_depthは1-indexed)
+        filtered = [s for s in raw_sections if s["depth"] < max_depth]
         
-        # ページ番号順にソート
-        sections.sort(key=lambda x: x[1])
-        return sections
+        # 2. ソート
+        filtered.sort(key=lambda x: (x["page"], x["depth"]))
+        
+        # 3. 重複解決
+        unique_sections = []
+        if not filtered:
+            return []
+
+        last_page = -1
+        for s in filtered:
+            if s["page"] != last_page:
+                unique_sections.append((s["title"], s["page"]))
+                last_page = s["page"]
+            else:
+                # 同じページの場合は、ソート済みなので既に最小depthのものが追加されているはず
+                continue
+                
+        return unique_sections
 
     def _write_sections(self, reader: PdfReader, sections: List[Tuple[str, int]], total_pages: int) -> None:
         """

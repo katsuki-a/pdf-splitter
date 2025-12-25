@@ -19,10 +19,18 @@ def main():
         help="Directory to save the split PDF files. Defaults to a folder named after the input file."
     )
 
+    parser.add_argument(
+        "-d", "--max-depth",
+        type=int,
+        default=1,
+        help="Maximum depth of the outline to process. Default is 1 (top-level items only)."
+    )
+
     args = parser.parse_args()
     
     input_path = args.input_file
     output_dir = args.output_dir
+    max_depth = args.max_depth
 
     if not os.path.exists(input_path):
         print(f"Error: Input file '{input_path}' not found.", file=sys.stderr)
@@ -35,9 +43,10 @@ def main():
 
     print(f"Input File: {input_path}")
     print(f"Output Directory: {output_dir}")
+    print(f"Max Depth: {max_depth}")
 
     splitter = PDFSplitter(input_path, output_dir)
-    splitter.split()
+    splitter.split(max_depth=max_depth)
 
 if __name__ == "__main__":
     main()
