@@ -66,15 +66,6 @@ Split a file and save to a specific directory:
 python -m src.cli my_book.pdf --output ./chapters/
 ```
 
-## Project Structure
-
-*   `src/`: Source code directory.
-    *   `cli.py`: Entry point for the CLI.
-    *   `splitter.py`: Core logic for PDF splitting.
-    *   `utils.py`: Utility functions (e.g., filename sanitization).
-*   `requirements.txt`: Python dependencies.
-*   `AGENTS.md`: Project directives and architectural plans.
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
