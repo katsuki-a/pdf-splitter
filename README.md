@@ -1,6 +1,6 @@
 # PDF Splitter CLI
 
-A robust, general-purpose Python CLI tool for splitting PDF files based on their outline (bookmarks). 
+A simple and efficient Python CLI tool for splitting PDF files based on their outline (bookmarks). 
 
 Originally optimized for O'Reilly-style technical books (handling structures like Parts -> Chapters), this tool can be used with any PDF that has a valid outline.
 
