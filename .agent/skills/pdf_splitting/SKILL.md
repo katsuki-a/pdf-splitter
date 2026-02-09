@@ -1,63 +1,62 @@
 ---
 name: pdf_splitting
 description: >
-    Splitting PDF files using the project's custom PDF splitter tool.
-    This skill covers setting up the environment, running the splitter CLI commands
-    (with appropriate arguments for input path, output directory, and split depth),
-    and troubleshooting common issues like ModuleNotFoundError.
+    プロジェクト独自のPDF分割ツールを使用してPDFファイルを分割する方法です。
+    このスキルでは、環境設定、スプリッターCLIコマンドの実行（入力パス、出力ディレクトリ、
+    分割深度などの適切な引数を使用）、およびModuleNotFoundErrorなどの一般的な問題のトラブルシューティングについて解説します。
 ---
 
-# PDF Splitting Skill
+# PDF分割スキル
 
-## Overview
-This skill outlines how to use the `pdf-splitter` tool to divide a PDF file into multiple smaller files based on its outline (bookmarks). It is particularly useful for splitting large technical books into individual chapters or sections.
+## 概要
+このスキルは、`pdf-splitter`ツールを使用して、アウトライン（しおり）に基づいてPDFファイルを複数の小さなファイルに分割する方法を説明します。大きな技術書を個別の章や節に分割する場合に特に便利です。
 
-## Prerequisites
-- Python 3.9+
-- A virtual environment (`.venv`) set up in the project root.
-- Dependencies installed (`pip install -r requirements.txt`).
+## 前提条件
+- Python 3.9以上
+- プロジェクトルートに仮想環境 (`.venv`) がセットアップされていること。
+- 依存関係がインストールされていること (`pip install -r requirements.txt`)。
 
-## Command Usage
+## コマンドの使用方法
 
-To run the splitter, use the following command format from the project root directory:
+スプリッターを実行するには、プロジェクトのルートディレクトリから以下のコマンド形式を使用してください：
 
 ```bash
 PYTHONPATH=. .venv/bin/python src/cli.py <input_pdf_path> [-o <output_directory>] [-d <max_depth>]
 ```
 
-### Arguments:
-- `<input_pdf_path>`: (Required) Path to the source PDF file.
-- `-o`, `--output`: (Optional) Directory to save the split files. Defaults to `<input_filename>_split`.
-- `-d`, `--max-depth`: (Optional) Maximum depth of the outline to process. `1` means top-level chapters only. `2` includes sub-chapters. Default is `1`.
+### 引数:
+- `<input_pdf_path>`: (必須) 元のPDFファイルへのパス。
+- `-o`, `--output`: (任意) 分割されたファイルを保存するディレクトリ。デフォルトは `<input_filename>_split` です。
+- `-d`, `--max-depth`: (任意) 処理するアウトラインの最大深度。`1` はトップレベルの章のみを意味します。`2` はサブチャプターを含みます。デフォルトは `1` です。
 
-## Examples
+## 使用例
 
-### Split by Chapters (Top-Level Only)
-Splits the PDF into top-level chapters (e.g., Chapter 1, Chapter 2).
+### 章ごとに分割（トップレベルのみ）
+PDFをトップレベルの章（例：第1章、第2章）に分割します。
 
 ```bash
 PYTHONPATH=. .venv/bin/python src/cli.py "pdf/book/my_book.pdf" -o "pdf/book/my_book_chapters" -d 1
 ```
 
-### Split by Sections (Sub-Chapters)
-Splits the PDF into finer sections (e.g., Section 1.1, Section 1.2).
+### 節ごとに分割（サブチャプター）
+PDFをより細かいセクション（例：セクション1.1、セクション1.2）に分割します。
 
 ```bash
 PYTHONPATH=. .venv/bin/python src/cli.py "pdf/book/my_book.pdf" -o "pdf/book/my_book_sections" -d 2
 ```
 
-## Troubleshooting
+## トラブルシューティング
 
 ### ModuleNotFoundError: No module named 'src'
-If you encounter `ModuleNotFoundError: No module named 'src'`, it means Python cannot find the `src` package. Ensure you are running the command from the project root and have set `PYTHONPATH=.`.
+`ModuleNotFoundError: No module named 'src'` というエラーが発生した場合、Pythonが `src` パッケージを見つけられないことを意味します。コマンドをプロジェクトルートから実行し、`PYTHONPATH=.` が設定されていることを確認してください。
 
-**Correct:**
+**正しい例:**
 ```bash
 PYTHONPATH=. .venv/bin/python src/cli.py ...
 ```
 
-**Incorrect:**
+**誤った例:**
 ```bash
-python src/cli.py ...  # Failing to set PYTHONPATH
-cd src && python cli.py ... # Running from the wrong directory
+python src/cli.py ...  # PYTHONPATHを設定していない
+cd src && python cli.py ... # 間違ったディレクトリから実行している
 ```
