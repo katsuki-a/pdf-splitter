@@ -34,16 +34,16 @@ The core CLI structure is implemented using a modular approach.
 
 ## 5. Current State vs. Desired State
 *   **Current:** 
-    *   Modular CLI tool with `argparse` support.
-    *   **Recursive Outline Support:** Can traverse nested bookmarks with configurable depth (`--max-depth`).
-    *   **Smart Conflict Resolution:** Handles multiple outline items pointing to the same page by prioritizing higher-level items.
-    *   **Automated Sanitization:** Generates safe filenames from chapter titles.
-    *   **Test Suite:** Unit tests cover core splitting logic and utilities.
+    *   **Core CLI:** Robust argument parsing with `argparse`.
+    *   **Recursive Splitting:** Successfully handles nested outlines with configurable depth (`--max-depth`).
+    *   **Conflict Resolution:** Smartly handles multiple outline items pointing to the same page.
+    *   **Sanitization:** Validates and cleans filenames for cross-platform compatibility.
+    *   **Documentation:** Agent skills created for automated usage documentation.
+    *   **Test Suite:** Unit tests implemented for core logic.
 *   **Desired:** 
-    *   **Selective Splitting:** Support for regex-based title exclusion or inclusion (e.g., skip "Front Matter").
-    *   **Configuration Files:** Support for per-book configuration (YAML/JSON) to save preferred depth and exclusion rules.
-    *   **Enhanced Metadata:** Preservation of original metadata and internal links in split files where possible.
-    *   **Progress Visualization:** Add a progress bar (e.g., `tqdm`) for processing large PDF files.
-    *   **Error Robustness:** Better handling of malformed PDF outlines or missing destinations.
-    *   **CI Integration:** GitHub Actions for automated linting and testing.
+    *   **Advanced Filtering:** Regex-based inclusion/exclusion of chapters (e.g., skip "Front Matter").
+    *   **Config Management:** YAML/JSON support for saving book-specific preferences.
+    *   **Metadata Handling:** Preserve original PDF metadata in split files.
+    *   **UX Improvements:** Add progress bars (`tqdm`) for better user feedback during long operations.
+    *   **CI/CD:** GitHub Actions workflow for automated testing and linting.
 
