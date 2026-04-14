@@ -1,9 +1,21 @@
 import os
-from typing import Any, List, Tuple
+from dataclasses import dataclass
+from typing import Any, List, Optional, Tuple
 
 from pypdf import PdfReader, PdfWriter
 
 from src.utils import sanitize_filename
+
+
+@dataclass(frozen=True)
+class SectionPlan:
+    index: int
+    title: str
+    start_page: int
+    end_page: int
+    output_filename: str
+    output_path: str
+    skip_reason: Optional[str] = None
 
 
 class PDFSplitter:
@@ -11,17 +23,14 @@ class PDFSplitter:
         self.pdf_path = pdf_path
         self.output_dir = output_dir
 
-    def split(self, max_depth: int = 1) -> None:
+    def split(self, max_depth: int = 1, dry_run: bool = False) -> None:
         """
         PDFのアウトラインに基づいてファイルを分割する。
 
         Args:
             max_depth (int): 解析するアウトラインの最大深度。1はトップレベルのみ。
+            dry_run (bool): Trueの場合、PDFを書き出さず分割計画のみ表示する。
         """
-        if not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
-            print(f"Created output directory: {self.output_dir}")
-
         try:
             reader = PdfReader(self.pdf_path)
             total_pages = len(reader.pages)
@@ -42,7 +51,17 @@ class PDFSplitter:
                 print("No sections found after filtering.")
                 return
 
-            self._write_sections(reader, sections, total_pages)
+            section_plans = self._build_section_plans(sections, total_pages)
+
+            if dry_run:
+                self._print_dry_run(section_plans)
+                return
+
+            if not os.path.exists(self.output_dir):
+                os.makedirs(self.output_dir)
+                print(f"Created output directory: {self.output_dir}")
+
+            self._write_sections(reader, section_plans)
             print("Split complete.")
 
         except Exception as e:
@@ -104,13 +123,13 @@ class PDFSplitter:
 
         return unique_sections
 
-    def _write_sections(
-        self, reader: PdfReader, sections: List[Tuple[str, int]], total_pages: int
-    ) -> None:
+    def _build_section_plans(
+        self, sections: List[Tuple[str, int]], total_pages: int
+    ) -> List[SectionPlan]:
         """
-        抽出されたセクション情報に基づいてPDFファイルを書き出す。
+        抽出されたセクション情報から書き出し計画を作成する。
         """
-        print(f"Found {len(sections)} sections. Starting split...")
+        section_plans = []
 
         for i in range(len(sections)):
             title, start_page = sections[i]
@@ -121,19 +140,75 @@ class PDFSplitter:
             else:
                 end_page = total_pages
 
-            # 無効なセクションのスキップ
+            skip_reason = None
             if start_page >= end_page:
-                print(
-                    "Skipping empty or invalid section: "
-                    f"{title} (Pages {start_page}-{end_page})"
-                )
-                continue
+                skip_reason = "empty or invalid page range"
 
             output_filename = f"{i:02d}_{sanitize_filename(title)}.pdf"
             output_path = os.path.join(self.output_dir, output_filename)
+            section_plans.append(
+                SectionPlan(
+                    index=i,
+                    title=title,
+                    start_page=start_page,
+                    end_page=end_page,
+                    output_filename=output_filename,
+                    output_path=output_path,
+                    skip_reason=skip_reason,
+                )
+            )
 
-            self._write_single_pdf(reader, start_page, end_page, output_path)
-            print(f"Saved: {output_filename} (Pages {start_page + 1}-{end_page})")
+        return section_plans
+
+    def _print_dry_run(self, section_plans: List[SectionPlan]) -> None:
+        """
+        書き出し予定のセクション情報を表示する。
+        """
+        writable_count = sum(1 for plan in section_plans if not plan.skip_reason)
+        skipped_count = len(section_plans) - writable_count
+
+        print(f"Dry run: {writable_count} files would be written to {self.output_dir}.")
+        if skipped_count:
+            print(f"Skipped sections: {skipped_count}")
+
+        for plan in section_plans:
+            page_range = f"{plan.start_page + 1}-{plan.end_page}"
+            if plan.skip_reason:
+                print(
+                    f"Skip: {plan.title} (Pages {page_range}) "
+                    f"Reason: {plan.skip_reason}"
+                )
+                continue
+
+            print(
+                f"Would save: {plan.output_filename} "
+                f"(Title: {plan.title}, Pages {page_range})"
+            )
+
+    def _write_sections(
+        self, reader: PdfReader, section_plans: List[SectionPlan]
+    ) -> None:
+        """
+        書き出し計画に基づいてPDFファイルを書き出す。
+        """
+        print(f"Found {len(section_plans)} sections. Starting split...")
+
+        for plan in section_plans:
+            if plan.skip_reason:
+                print(
+                    "Skipping section: "
+                    f"{plan.title} (Pages {plan.start_page}-{plan.end_page}) "
+                    f"Reason: {plan.skip_reason}"
+                )
+                continue
+
+            self._write_single_pdf(
+                reader, plan.start_page, plan.end_page, plan.output_path
+            )
+            print(
+                f"Saved: {plan.output_filename} "
+                f"(Pages {plan.start_page + 1}-{plan.end_page})"
+            )
 
     def _write_single_pdf(
         self, reader: PdfReader, start_page: int, end_page: int, output_path: str
