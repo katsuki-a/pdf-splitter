@@ -1,0 +1,4 @@
+interface:
+  display_name: "PDF Splitting"
+  short_description: "Run and validate PDF splitter CLI workflows"
+  default_prompt: "Use $pdf-splitting to preview and split a PDF by outline."

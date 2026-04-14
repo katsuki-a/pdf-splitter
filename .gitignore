@@ -1,8 +1,10 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -16,18 +18,42 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Virtual Environment
-venv/
+# Virtual environments
 .venv/
+venv/
 env/
 ENV/
 
-# Tool caches
+# Test, coverage, and quality-tool caches
+.coverage
+.coverage.*
+.pytest_cache/
 .ruff_cache/
+.tox/
+.nox/
+htmlcov/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.mypy_cache/
+.pyre/
+.pytype/
+
+# Python environment files
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Jupyter Notebook
+.ipynb_checkpoints/
 
 # uv lockfile is ignored while dependencies are managed with requirements*.txt.
 uv.lock
@@ -35,10 +61,11 @@ uv.lock
 # macOS
 .DS_Store
 
-# IDE
+# IDEs and editors
 .idea/
 .vscode/
 *.swp
+*.swo
 
-# PDF files
+# Project-local PDF inputs and generated split output
 *.pdf
