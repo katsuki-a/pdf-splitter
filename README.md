@@ -1,104 +1,96 @@
 # PDF Splitter CLI
 
-A simple and efficient Python CLI tool for splitting PDF files based on their outline (bookmarks). 
+A practical Python CLI tool for splitting PDF files using outline bookmarks.
 
-Originally optimized for O'Reilly-style technical books (handling structures like Parts -> Chapters), this tool can be used with any PDF that has a valid outline.
+The tool is optimized for O'Reilly-style technical books with nested outlines, while remaining usable for any PDF with a valid outline.
 
 ## Features
 
-*   **Smart Splitting:** Automatically detects the PDF outline and splits the document into separate files for each section.
-*   **Filename Sanitization:** Generates safe filenames from chapter titles, removing illegal characters.
-*   **Flexible Output:** Allows specifying a custom output directory. Defaults to a folder named after the input file.
-*   **Cross-Platform:** Works on Windows, macOS, and Linux (Python based).
+- **Smart splitting by outline** with configurable depth (`--max-depth`).
+- **Dry-run planning** (`--dry-run`) so you can inspect output before writing files.
+- **Regex filtering** (`--include-regex`, `--exclude-regex`, `--ignore-case`).
+- **Front/back matter policies** (`keep`, `merge`, `skip`).
+- **Config file support** (`--config` with JSON or YAML).
+- **Safe filenames** via sanitization.
+- **Operational logging** (`--verbose`, `--quiet`, `--log-file`).
 
 ## Requirements
 
-*   Python 3.9+
-*   `pypdf`
+- Python 3.9+
+- Dependencies in `requirements.txt`
 
 ## Installation
 
-### Recommended: `uv`
-
-1.  Clone this repository:
-    ```bash
-    git clone https://github.com/katsuki-a/pdf-splitter.git
-    cd pdf-splitter
-    ```
-
-2.  Create a virtual environment with `uv`:
-    ```bash
-    uv venv
-    ```
-
-3.  Install dependencies:
-    ```bash
-    uv pip install -r requirements.txt
-    ```
-
-4.  Run commands with `uv run`:
-    ```bash
-    uv run python -m src.cli --help
-    ```
-
-### Alternative: `venv` + `pip`
-
-If you don't use `uv`, you can still use the standard Python workflow:
-
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
 ## Usage
 
-To split a PDF file, run the tool as a module from the project root directory.
-
-### Basic Usage
-
 ```bash
-# Recommended
-uv run python -m src.cli <input_file_path> [-o <output_directory>] [-d <max_depth>]
+python -m src.cli <input_file> [options]
 ```
 
-Alternatively, if you are not using `uv`:
+### Main options
 
-```bash
-python -m src.cli <input_file_path> [-o <output_directory>] [-d <max_depth>]
-```
-
-If you encounter module import errors, you can explicitly set the `PYTHONPATH`:
-
-```bash
-PYTHONPATH=. python src/cli.py <input_file_path> ...
-```
-
-### Arguments
-
-*   `input_file`: Path to the input PDF file (Required).
-*   `-o`, `--output`: Directory to save the split PDF files. If omitted, a directory named `<input_filename>_split` will be created in the same location as the input file.
-*   `-d`, `--max-depth`: Maximum depth of the outline to process. 
-    *   `1`: Top-level chapters only (default).
-    *   `2`: Chapters and sub-sections.
+- `-o, --output`: Output directory. Defaults to `<input_stem>_split`.
+- `-d, --max-depth`: Max outline depth (default: `1`).
+- `--dry-run`: Print planned splits only.
+- `--include-regex`: Include only matching section titles.
+- `--exclude-regex`: Exclude matching section titles.
+- `--ignore-case`: Case-insensitive regex matching.
+- `--front-matter {keep,merge,skip}`
+- `--back-matter {keep,merge,skip}`
+- `--config`: Path to `.json`/`.yaml` config.
+- `--verbose`: Debug logs.
+- `--quiet`: Errors only.
+- `--log-file`: Write logs to a file.
 
 ### Examples
 
-**1. Split a file using default settings (top-level chapters only):**
 ```bash
-uv run python -m src.cli my_book.pdf
+# Basic split
+python -m src.cli my_book.pdf
+
+# Dry run with depth 2
+python -m src.cli my_book.pdf --max-depth 2 --dry-run
+
+# Exclude front matter-like titles and write to custom folder
+python -m src.cli my_book.pdf --exclude-regex "^(Preface|Foreword)" --ignore-case -o ./chapters
+
+# Use config file
+python -m src.cli my_book.pdf --config ./configs/oreilly.yaml
 ```
 
-**2. Split a file including nested sections (up to depth 2):**
-```bash
-uv run python -m src.cli my_book.pdf --max-depth 2
+## Config file example
+
+```yaml
+max_depth: 2
+front_matter: skip
+back_matter: merge
+include_regex: "Chapter|Part"
+ignore_case: true
 ```
 
-**3. Split a file and save to a specific directory:**
+## Exit codes
+
+- `0`: Success
+- `2`: CLI argument or config parsing error
+- `3`: Input read error (missing/invalid PDF)
+- `4`: Output write error
+- `5`: No usable outline sections after filtering
+- `6`: Unexpected runtime error
+
+## Quality checks
+
 ```bash
-uv run python -m src.cli my_book.pdf --output ./chapters/
+ruff format .
+ruff check .
+python -m pytest -q
 ```
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License. See [LICENSE](LICENSE).

@@ -1,28 +1,21 @@
 import os
+
 import pytest
-from pypdf import PdfWriter, PdfReader
-from src.splitter import PDFSplitter
+from pypdf import PdfReader, PdfWriter
+
+from src.splitter import EXIT_NO_SECTIONS, EXIT_OK, PDFSplitter, SplitOptions
+
 
 @pytest.fixture
 def dummy_pdf_with_outline(tmp_path):
-    """
-    テスト用にアウトライン付きの単純なPDFを作成してパスを返すフィクスチャ
-    構成:
-    - Page 0: Title Page
-    - Page 1: Chapter 1 Start (Bookmark: "Chapter 1")
-    - Page 2: Chapter 1 End
-    - Page 3: Chapter 2 Start (Bookmark: "Chapter 2")
-    - Page 4: Chapter 2 End
-    """
+    """Create a small outline PDF for tests."""
     pdf_path = tmp_path / "test_book.pdf"
     writer = PdfWriter()
 
-    # 5ページ分の空白ページを追加
     for _ in range(5):
         writer.add_blank_page(width=100, height=100)
 
-    # アウトライン（ブックマーク）を追加
-    # add_outline_item(title, page_number)
+    writer.add_outline_item("Preface", 0)
     writer.add_outline_item("Chapter 1", 1)
     writer.add_outline_item("Chapter 2", 3)
 
@@ -31,46 +24,45 @@ def dummy_pdf_with_outline(tmp_path):
 
     return str(pdf_path)
 
-def test_split_creates_files(dummy_pdf_with_outline, tmp_path):
-    """分割処理が実行され、ファイルが生成されるかテスト"""
-    output_dir = tmp_path / "output"
-    
-    splitter = PDFSplitter(dummy_pdf_with_outline, str(output_dir))
-    splitter.split()
 
-    # 出力ディレクトリが作成されているか
+def test_split_creates_files(dummy_pdf_with_outline, tmp_path):
+    """Split operation should generate chapter PDF files."""
+    output_dir = tmp_path / "output"
+
+    splitter = PDFSplitter(dummy_pdf_with_outline, str(output_dir))
+    exit_code = splitter.split(SplitOptions())
+
+    assert exit_code == EXIT_OK
     assert output_dir.exists()
 
-    # 生成されたファイルを確認
-    files = sorted(list(output_dir.glob("*.pdf")))
-    assert len(files) == 2
-    
-    # ファイル名のチェック
-    assert "00_Chapter 1.pdf" in files[0].name
-    assert "01_Chapter 2.pdf" in files[1].name
+    files = sorted(output_dir.glob("*.pdf"))
+    assert len(files) == 3
+    assert files[0].name == "00_Preface.pdf"
+    assert files[1].name == "01_Chapter 1.pdf"
+    assert files[2].name == "02_Chapter 2.pdf"
+
 
 def test_split_content_pages(dummy_pdf_with_outline, tmp_path):
-    """分割されたPDFのページ数が正しいか検証"""
+    """Generated split PDFs should have expected page counts."""
     output_dir = tmp_path / "output_content"
-    
+
     splitter = PDFSplitter(dummy_pdf_with_outline, str(output_dir))
-    splitter.split()
+    exit_code = splitter.split(SplitOptions())
 
-    files = sorted(list(output_dir.glob("*.pdf")))
-    
-    # Chapter 1: Page 1 to 3 (Total 2 pages: 1, 2)
-    # Book structure: 0, [1, 2], [3, 4]
-    # Chapter 1 starts at 1. Next starts at 3. So it covers 1, 2.
-    reader1 = PdfReader(files[0])
-    assert len(reader1.pages) == 2
+    assert exit_code == EXIT_OK
+    files = sorted(output_dir.glob("*.pdf"))
 
-    # Chapter 2: Page 3 to End (Total 2 pages: 3, 4)
-    reader2 = PdfReader(files[1])
-    assert len(reader2.pages) == 2
+    reader_preface = PdfReader(files[0])
+    reader_ch1 = PdfReader(files[1])
+    reader_ch2 = PdfReader(files[2])
+
+    assert len(reader_preface.pages) == 1
+    assert len(reader_ch1.pages) == 2
+    assert len(reader_ch2.pages) == 2
+
 
 def test_no_outline_handling(tmp_path):
-    """アウトラインがないPDFを処理した場合の挙動テスト"""
-    # アウトラインなしPDF作成
+    """PDF without outline should return no-section exit code."""
     pdf_path = tmp_path / "no_outline.pdf"
     writer = PdfWriter()
     writer.add_blank_page(width=100, height=100)
@@ -78,53 +70,84 @@ def test_no_outline_handling(tmp_path):
         writer.write(f)
 
     output_dir = tmp_path / "output_none"
-    
     splitter = PDFSplitter(str(pdf_path), str(output_dir))
-    splitter.split()
+    exit_code = splitter.split(SplitOptions())
 
-    # 出力ディレクトリは作成されるが、ファイルは空のはず（またはログが出るだけ）
-    if output_dir.exists():
-        assert len(list(output_dir.glob("*.pdf"))) == 0
+    assert exit_code == EXIT_NO_SECTIONS
+    assert not output_dir.exists()
+
 
 def test_nested_split_conflict_resolution(tmp_path):
-    """ネストされたアウトラインと重複ページの解決テスト"""
+    """Conflict resolution should keep shallower section for same page."""
     pdf_path = tmp_path / "nested_test.pdf"
     writer = PdfWriter()
     for _ in range(10):
         writer.add_blank_page(width=100, height=100)
-    
-    # 階層構造を作成
-    # p0: Root 1
-    # p2: Part 1 (Depth 0)
-    # p2: Chapter 1 (Depth 1, same page as Part 1)
-    # p4: Chapter 2 (Depth 1)
-    # p4: Section 2.1 (Depth 2, same page as Chapter 2)
+
     writer.add_outline_item("Root 1", 0)
-    p1 = writer.add_outline_item("Part 1", 2)
-    writer.add_outline_item("Chapter 1", 2, parent=p1)
-    p2 = writer.add_outline_item("Chapter 2", 4)
-    writer.add_outline_item("Section 2.1", 4, parent=p2)
+    part_1 = writer.add_outline_item("Part 1", 2)
+    writer.add_outline_item("Chapter 1", 2, parent=part_1)
+    chapter_2 = writer.add_outline_item("Chapter 2", 4)
+    writer.add_outline_item("Section 2.1", 4, parent=chapter_2)
 
     with open(pdf_path, "wb") as f:
         writer.write(f)
 
     output_dir = tmp_path / "output_nested"
     splitter = PDFSplitter(str(pdf_path), str(output_dir))
-    
-    # max_depth=2 で実行（Root, Part, Chapterまで）
-    splitter.split(max_depth=2)
 
-    files = sorted(list(output_dir.glob("*.pdf")))
-    # 期待される結果:
-    # 00_Root 1.pdf (p0-p1)
-    # 01_Part 1.pdf (p2-p3) -> Chapter 1は同じページなので、より浅いPart 1が優先される
-    # 02_Chapter 2.pdf (p4-end) -> Section 2.1は同じページなので、より浅いChapter 2が優先される
-    
+    exit_code = splitter.split(SplitOptions(max_depth=2))
+
+    assert exit_code == EXIT_OK
+    files = sorted(output_dir.glob("*.pdf"))
+
     assert len(files) == 3
     assert "00_Root 1.pdf" in files[0].name
     assert "01_Part 1.pdf" in files[1].name
     assert "02_Chapter 2.pdf" in files[2].name
-    
-    # Section 2.1 が含まれていない（Chapter 2に統合されている）ことを確認
-    for f in files:
-        assert "Section 2.1" not in f.name
+
+    for file_path in files:
+        assert "Section 2.1" not in file_path.name
+
+
+def test_regex_filters_and_case_insensitive(dummy_pdf_with_outline, tmp_path):
+    """Regex include and exclude should filter section names."""
+    output_dir = tmp_path / "output_filter"
+    splitter = PDFSplitter(dummy_pdf_with_outline, str(output_dir))
+
+    exit_code = splitter.split(
+        SplitOptions(
+            include_regex="chapter",
+            exclude_regex="2",
+            ignore_case=True,
+        )
+    )
+
+    assert exit_code == EXIT_OK
+    files = sorted(output_dir.glob("*.pdf"))
+    assert len(files) == 1
+    assert files[0].name == "00_Chapter 1.pdf"
+
+
+def test_front_matter_skip(dummy_pdf_with_outline, tmp_path):
+    """Skipping front matter should remove preface output."""
+    output_dir = tmp_path / "output_front_skip"
+    splitter = PDFSplitter(dummy_pdf_with_outline, str(output_dir))
+
+    exit_code = splitter.split(SplitOptions(front_matter="skip"))
+
+    assert exit_code == EXIT_OK
+    files = sorted(output_dir.glob("*.pdf"))
+    assert len(files) == 2
+    assert files[0].name == "00_Chapter 1.pdf"
+
+
+def test_dry_run_generates_no_output_files(dummy_pdf_with_outline, tmp_path):
+    """Dry run mode should not write any PDF output."""
+    output_dir = tmp_path / "output_dry"
+    splitter = PDFSplitter(dummy_pdf_with_outline, str(output_dir))
+
+    exit_code = splitter.split(SplitOptions(dry_run=True))
+
+    assert exit_code == EXIT_OK
+    assert not os.path.exists(output_dir)
