@@ -72,6 +72,20 @@ def test_split_content_pages(dummy_pdf_with_outline, tmp_path):
     assert len(reader2.pages) == 2
 
 
+def test_dry_run_does_not_write_files(dummy_pdf_with_outline, tmp_path, capsys):
+    """dry-runでは出力ディレクトリとPDFファイルを作成しない"""
+    output_dir = tmp_path / "output_dry_run"
+
+    splitter = PDFSplitter(dummy_pdf_with_outline, str(output_dir))
+    splitter.split(dry_run=True)
+
+    captured = capsys.readouterr()
+    assert not output_dir.exists()
+    assert "Dry run: 2 files would be written" in captured.out
+    assert "Would save: 00_Chapter 1.pdf" in captured.out
+    assert "Would save: 01_Chapter 2.pdf" in captured.out
+
+
 def test_no_outline_handling(tmp_path):
     """アウトラインがないPDFを処理した場合の挙動テスト"""
     # アウトラインなしPDF作成

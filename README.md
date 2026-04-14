@@ -59,13 +59,13 @@ To split a PDF file, run the tool as a module from the project root directory.
 
 ```bash
 # Recommended
-uv run python -m src.cli <input_file_path> [-o <output_directory>] [-d <max_depth>]
+uv run python -m src.cli <input_file_path> [-o <output_directory>] [-d <max_depth>] [--dry-run]
 ```
 
 Alternatively, if you are not using `uv`:
 
 ```bash
-python -m src.cli <input_file_path> [-o <output_directory>] [-d <max_depth>]
+python -m src.cli <input_file_path> [-o <output_directory>] [-d <max_depth>] [--dry-run]
 ```
 
 If you encounter module import errors, you can explicitly set the `PYTHONPATH`:
@@ -81,6 +81,7 @@ PYTHONPATH=. python src/cli.py <input_file_path> ...
 *   `-d`, `--max-depth`: Maximum depth of the outline to process. 
     *   `1`: Top-level chapters only (default).
     *   `2`: Chapters and sub-sections.
+*   `--dry-run`: Print the planned split without writing PDF files.
 
 ### Examples
 
@@ -97,6 +98,11 @@ uv run python -m src.cli my_book.pdf --max-depth 2
 **3. Split a file and save to a specific directory:**
 ```bash
 uv run python -m src.cli my_book.pdf --output ./chapters/
+```
+
+**4. Preview the split without writing files:**
+```bash
+uv run python -m src.cli my_book.pdf --dry-run
 ```
 
 ## Development

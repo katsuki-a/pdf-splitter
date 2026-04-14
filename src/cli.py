@@ -35,11 +35,18 @@ def main():
         ),
     )
 
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print the planned split without writing PDF files.",
+    )
+
     args = parser.parse_args()
 
     input_path = args.input_file
     output_dir = args.output_dir
     max_depth = args.max_depth
+    dry_run = args.dry_run
 
     if not os.path.exists(input_path):
         print(f"Error: Input file '{input_path}' not found.", file=sys.stderr)
@@ -53,9 +60,11 @@ def main():
     print(f"Input File: {input_path}")
     print(f"Output Directory: {output_dir}")
     print(f"Max Depth: {max_depth}")
+    if dry_run:
+        print("Dry Run: enabled")
 
     splitter = PDFSplitter(input_path, output_dir)
-    splitter.split(max_depth=max_depth)
+    splitter.split(max_depth=max_depth, dry_run=dry_run)
 
 
 if __name__ == "__main__":
