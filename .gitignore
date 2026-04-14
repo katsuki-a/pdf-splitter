@@ -26,6 +26,12 @@ venv/
 env/
 ENV/
 
+# Tool caches
+.ruff_cache/
+
+# uv lockfile is ignored while dependencies are managed with requirements*.txt.
+uv.lock
+
 # macOS
 .DS_Store
 
