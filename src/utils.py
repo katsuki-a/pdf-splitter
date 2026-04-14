@@ -1,12 +1,13 @@
 import re
 
+
 def sanitize_filename(filename: str) -> str:
     """
     ファイル名として使用できない文字を置換する。
-    
+
     Args:
         filename (str): 元のファイル名
-        
+
     Returns:
         str: サニタイズされたファイル名
     """

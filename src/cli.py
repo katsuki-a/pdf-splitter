@@ -1,33 +1,42 @@
 import argparse
 import os
 import sys
+
 from src.splitter import PDFSplitter
+
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Split a PDF file into multiple files based on its outline (bookmarks)."
+        description=(
+            "Split a PDF file into multiple files based on its outline (bookmarks)."
+        )
     )
-    
+
+    parser.add_argument("input_file", help="Path to the input PDF file.")
+
     parser.add_argument(
-        "input_file",
-        help="Path to the input PDF file."
-    )
-    
-    parser.add_argument(
-        "-o", "--output",
+        "-o",
+        "--output",
         dest="output_dir",
-        help="Directory to save the split PDF files. Defaults to a folder named after the input file."
+        help=(
+            "Directory to save the split PDF files. Defaults to a folder named "
+            "after the input file."
+        ),
     )
 
     parser.add_argument(
-        "-d", "--max-depth",
+        "-d",
+        "--max-depth",
         type=int,
         default=1,
-        help="Maximum depth of the outline to process. Default is 1 (top-level items only)."
+        help=(
+            "Maximum depth of the outline to process. Default is 1 "
+            "(top-level items only)."
+        ),
     )
 
     args = parser.parse_args()
-    
+
     input_path = args.input_file
     output_dir = args.output_dir
     max_depth = args.max_depth
@@ -47,6 +56,7 @@ def main():
 
     splitter = PDFSplitter(input_path, output_dir)
     splitter.split(max_depth=max_depth)
+
 
 if __name__ == "__main__":
     main()

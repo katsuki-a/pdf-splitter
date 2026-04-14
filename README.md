@@ -99,6 +99,29 @@ uv run python -m src.cli my_book.pdf --max-depth 2
 uv run python -m src.cli my_book.pdf --output ./chapters/
 ```
 
+## Development
+
+Install development dependencies:
+
+```bash
+uv venv
+uv pip install -r requirements-dev.txt
+```
+
+Run the checks locally:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+uv run python -m pytest
+```
+
+Apply formatting:
+
+```bash
+uv run ruff format .
+```
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

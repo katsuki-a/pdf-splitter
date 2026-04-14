@@ -1,7 +1,8 @@
-import os
 import pytest
-from pypdf import PdfWriter, PdfReader
+from pypdf import PdfReader, PdfWriter
+
 from src.splitter import PDFSplitter
+
 
 @pytest.fixture
 def dummy_pdf_with_outline(tmp_path):
@@ -31,10 +32,11 @@ def dummy_pdf_with_outline(tmp_path):
 
     return str(pdf_path)
 
+
 def test_split_creates_files(dummy_pdf_with_outline, tmp_path):
     """分割処理が実行され、ファイルが生成されるかテスト"""
     output_dir = tmp_path / "output"
-    
+
     splitter = PDFSplitter(dummy_pdf_with_outline, str(output_dir))
     splitter.split()
 
@@ -44,20 +46,21 @@ def test_split_creates_files(dummy_pdf_with_outline, tmp_path):
     # 生成されたファイルを確認
     files = sorted(list(output_dir.glob("*.pdf")))
     assert len(files) == 2
-    
+
     # ファイル名のチェック
     assert "00_Chapter 1.pdf" in files[0].name
     assert "01_Chapter 2.pdf" in files[1].name
 
+
 def test_split_content_pages(dummy_pdf_with_outline, tmp_path):
     """分割されたPDFのページ数が正しいか検証"""
     output_dir = tmp_path / "output_content"
-    
+
     splitter = PDFSplitter(dummy_pdf_with_outline, str(output_dir))
     splitter.split()
 
     files = sorted(list(output_dir.glob("*.pdf")))
-    
+
     # Chapter 1: Page 1 to 3 (Total 2 pages: 1, 2)
     # Book structure: 0, [1, 2], [3, 4]
     # Chapter 1 starts at 1. Next starts at 3. So it covers 1, 2.
@@ -67,6 +70,7 @@ def test_split_content_pages(dummy_pdf_with_outline, tmp_path):
     # Chapter 2: Page 3 to End (Total 2 pages: 3, 4)
     reader2 = PdfReader(files[1])
     assert len(reader2.pages) == 2
+
 
 def test_no_outline_handling(tmp_path):
     """アウトラインがないPDFを処理した場合の挙動テスト"""
@@ -78,7 +82,7 @@ def test_no_outline_handling(tmp_path):
         writer.write(f)
 
     output_dir = tmp_path / "output_none"
-    
+
     splitter = PDFSplitter(str(pdf_path), str(output_dir))
     splitter.split()
 
@@ -86,13 +90,14 @@ def test_no_outline_handling(tmp_path):
     if output_dir.exists():
         assert len(list(output_dir.glob("*.pdf"))) == 0
 
+
 def test_nested_split_conflict_resolution(tmp_path):
     """ネストされたアウトラインと重複ページの解決テスト"""
     pdf_path = tmp_path / "nested_test.pdf"
     writer = PdfWriter()
     for _ in range(10):
         writer.add_blank_page(width=100, height=100)
-    
+
     # 階層構造を作成
     # p0: Root 1
     # p2: Part 1 (Depth 0)
@@ -110,21 +115,21 @@ def test_nested_split_conflict_resolution(tmp_path):
 
     output_dir = tmp_path / "output_nested"
     splitter = PDFSplitter(str(pdf_path), str(output_dir))
-    
+
     # max_depth=2 で実行（Root, Part, Chapterまで）
     splitter.split(max_depth=2)
 
     files = sorted(list(output_dir.glob("*.pdf")))
     # 期待される結果:
     # 00_Root 1.pdf (p0-p1)
-    # 01_Part 1.pdf (p2-p3) -> Chapter 1は同じページなので、より浅いPart 1が優先される
-    # 02_Chapter 2.pdf (p4-end) -> Section 2.1は同じページなので、より浅いChapter 2が優先される
-    
+    # 01_Part 1.pdf (p2-p3): Chapter 1は同じページなので浅い項目を優先
+    # 02_Chapter 2.pdf (p4-end): Section 2.1は同じページなので浅い項目を優先
+
     assert len(files) == 3
     assert "00_Root 1.pdf" in files[0].name
     assert "01_Part 1.pdf" in files[1].name
     assert "02_Chapter 2.pdf" in files[2].name
-    
+
     # Section 2.1 が含まれていない（Chapter 2に統合されている）ことを確認
     for f in files:
         assert "Section 2.1" not in f.name
